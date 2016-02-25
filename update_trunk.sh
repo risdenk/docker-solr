@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 TEMPLATE=Dockerfile.template.trunk
 BUILD_NUMBER=$(curl -sSL https://builds.apache.org/job/Solr-Artifacts-trunk/lastSuccessfulBuild/buildNumber)
 SOLR_VERSION="6.0.0-$BUILD_NUMBER"
