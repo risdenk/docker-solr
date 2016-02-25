@@ -1,9 +1,9 @@
 #!/bin/bash
 
-set -e
+set -e -o pipefail
 
 TEMPLATE=Dockerfile.template.trunk
-BUILD_NUMBER=$(curl -sSL https://builds.apache.org/job/Solr-Artifacts-trunk/lastSuccessfulBuild/buildNumber)
+BUILD_NUMBER=$(curl -sSL -f https://builds.apache.org/job/Solr-Artifacts-trunk/lastSuccessfulBuild/buildNumber)
 SOLR_VERSION="6.0.0-$BUILD_NUMBER"
 
 set -x
