@@ -15,7 +15,7 @@ RUN groupadd -r $SOLR_USER && \
 ENV SOLR_VERSION 7.0.0-2804
 
 RUN mkdir -p /opt/solr && \
-  wget -nv --output-document=/opt/solr.tgz https://builds.apache.org/job/Solr-Artifacts-master/lastSuccessfulBuild/artifact/solr/package/solr-$SOLR_VERSION.tgz && \
+  wget -nv --output-document=/opt/solr.tgz https://builds.apache.org/job/Solr-Artifacts-trunk/lastSuccessfulBuild/artifact/solr/package/solr-$SOLR_VERSION.tgz && \
   tar -C /opt/solr --extract --file /opt/solr.tgz --strip-components=1 && \
   rm /opt/solr.tgz* && \
   mkdir -p /opt/solr/server/solr/lib && \
