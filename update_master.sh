@@ -11,5 +11,5 @@ cp $TEMPLATE "master/Dockerfile"
 sed -r -i -e 's/^(ENV SOLR_VERSION) .*/\1 '"$SOLR_VERSION"'/' "master/Dockerfile"
 
 git add master
-git commit -m "Updated Solr master to $SOLR_VERSION"
+git commit -S -m "Updated Solr master to $SOLR_VERSION"
 git push origin solr-master
