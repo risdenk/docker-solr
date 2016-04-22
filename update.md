@@ -23,6 +23,14 @@ git clone git@github.com:docker-solr/docker-solr.git
 cd docker-solr
 ```
 
+If you're in Europe, you can override the download file locations for much faster downloads:
+
+```
+export SOLR_DOWNLOAD_SERVER="http://www-eu.apache.org/dist/lucene/solr"
+export archiveUrl="https://www-eu.apache.org/dist/lucene/solr"
+export mirrorUrl="http://www-eu.apache.org/dist/lucene/solr"
+```
+
 Run the script that creates a directory for the new version, downloads solr to checksum, and creates a Dockerfile:
 
 ```
@@ -55,13 +63,20 @@ Now for each of the resulting images, start a container to test:
 docker run --name solr-test -d -P docker-solr/docker-solr:5.4
 ```
 
+Check the logs for startup messages:
+
+```
+docker logs solr-test
+```
+
 Get the URL of the Solr running on it:
 
 ```
 echo "http://$(echo $DOCKER_HOST | sed -e 's,tcp://,,' -e 's,:.*,,'):$(docker port solr-test 8983/tcp| sed 's/^.*://')/"
 ```
 
-and check that URL in your browser, paying particular attention to the `solr-impl` in the administration interface, which lists the Solr version, and check for errors under "Logging".
+and check that URL in your browser, paying particular attention to the `solr-impl` in the administration interface, which lists the Solr version.
+Check for errors under "Logging".
 
 If that looks in order, then clean up the container:
 
@@ -90,7 +105,7 @@ aliases=(
 )
 ```
 
-## Commit changes to our fork
+## Commit changes to our local repository
 
 Now we can commit the changes to our repository.
 
@@ -152,6 +167,11 @@ git push
 ```
 
 That is our repository updated.
+
+## Check the automated build
+
+The check-in will trigger an automated build on https://travis-ci.org/docker-solr/docker-solr.
+Verify that that succeeds.
 
 ## Update the official-images repository
 

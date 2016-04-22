@@ -1,31 +1,34 @@
 
-FROM    java:openjdk-8-jre
+FROM    java:openjdk-8-jre-alpine
 MAINTAINER  Martijn Koster "mak-docker@greenhills.co.uk"
 
 # Override the solr download location with e.g.:
 #   docker build -t mine --build-arg SOLR_DOWNLOAD_SERVER=http://www-eu.apache.org/dist/lucene/solr .
 ARG SOLR_DOWNLOAD_SERVER
 
-RUN apt-get update && \
-  apt-get -y install lsof && \
-  rm -rf /var/lib/apt/lists/*
+RUN apk add --update \
+        lsof \
+        gnupg \
+        tar \
+        bash \
+    && rm -rf /var/cache/apk/*
 
 ENV SOLR_USER solr
 ENV SOLR_UID 8983
 
-RUN groupadd -r -g $SOLR_UID $SOLR_USER && \
-  useradd -r -u $SOLR_UID -g $SOLR_USER $SOLR_USER
+RUN addgroup -S -g $SOLR_UID $SOLR_USER && \
+  adduser -S -u $SOLR_UID -g $SOLR_USER $SOLR_USER
 
-ENV SOLR_KEY EDF961FF03E647F9CA8A9C2C758051CCA3A13A7F
+ENV SOLR_KEY 2C72EB1397733A551DDB60CCF119941F6E68DA61
 RUN gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$SOLR_KEY"
 
-ENV SOLR_VERSION 5.3.2
-ENV SOLR_SHA256 7c26601229ed712c639d00882f35304d87e0032028be4754d098a9b694877f48
+ENV SOLR_VERSION 5.5.0
+ENV SOLR_SHA256 c5fa5cb996fe1432e09bb2f6053ffbeb095436db4a77e9c6488b531db726b04d
 ENV SOLR_URL ${SOLR_DOWNLOAD_SERVER:-http://www-us.apache.org/dist/lucene/solr}/$SOLR_VERSION/solr-$SOLR_VERSION.tgz
 
 RUN mkdir -p /opt/solr && \
-  wget -nv $SOLR_URL -O /opt/solr.tgz && \
-  wget -nv $SOLR_URL.asc -O /opt/solr.tgz.asc && \
+  wget $SOLR_URL -O /opt/solr.tgz && \
+  wget $SOLR_URL.asc -O /opt/solr.tgz.asc && \
   echo "$SOLR_SHA256 */opt/solr.tgz" | sha256sum -c - && \
   (>&2 ls -l /opt/solr.tgz /opt/solr.tgz.asc) && \
   gpg --verify /opt/solr.tgz.asc && \
