@@ -1,21 +1,23 @@
 
-FROM    java:openjdk-8-jre
+FROM    java:openjdk-8-jre-alpine
 MAINTAINER  Kevin Risden "risdenk@avalonconsult.com"
 
-RUN apt-get update && \
-  apt-get -y install lsof && \
-  rm -rf /var/lib/apt/lists/*
+RUN apk --no-cache add \
+        lsof \
+        gnupg \
+        tar \
+        bash
 
 ENV SOLR_USER solr
 ENV SOLR_UID 8983
 
-RUN groupadd -r $SOLR_USER && \
-  useradd -r -u $SOLR_UID -g $SOLR_USER $SOLR_USER
+RUN addgroup -S -g $SOLR_UID $SOLR_USER && \
+  adduser -S -u $SOLR_UID -g $SOLR_USER $SOLR_USER
 
 ENV SOLR_VERSION 7.0.0-2848
 
 RUN mkdir -p /opt/solr && \
-  wget -nv --output-document=/opt/solr.tgz https://builds.apache.org/job/Solr-Artifacts-master/lastSuccessfulBuild/artifact/solr/package/solr-$SOLR_VERSION.tgz && \
+  wget -O /opt/solr.tgz https://builds.apache.org/job/Solr-Artifacts-master/lastSuccessfulBuild/artifact/solr/package/solr-$SOLR_VERSION.tgz && \
   tar -C /opt/solr --extract --file /opt/solr.tgz --strip-components=1 && \
   rm /opt/solr.tgz* && \
   mkdir -p /opt/solr/server/solr/lib && \
