@@ -1,9 +1,11 @@
 # Supported tags and respective `Dockerfile` links
 
--       [`6.0.0`, `6.6`, `6`, `latest` (*6.0/Dockerfile*)](https://github.com/docker-solr/docker-solr/blob/8521b45272527088c95744a87ad35232f593b772/6.0/Dockerfile)
--       [`5.5.0`, `5.5`, `5` (*5.5/Dockerfile*)](https://github.com/docker-solr/docker-solr/blob/8521b45272527088c95744a87ad35232f593b772/5.5/Dockerfile)
--       [`5.4.1`, `5.4` (*5.4/Dockerfile*)](https://github.com/docker-solr/docker-solr/blob/8521b45272527088c95744a87ad35232f593b772/5.4/Dockerfile)
--       [`5.3.2`, `5.3` (*5.3/Dockerfile*)](https://github.com/docker-solr/docker-solr/blob/8521b45272527088c95744a87ad35232f593b772/5.3/Dockerfile)
+-       [`6.2.0`, `6.2`, `6`, `latest` (*6.2/Dockerfile*)](https://github.com/docker-solr/docker-solr/blob/92b9a6d8415979f5a7e6d6ad4dc7df8856604d12/6.2/Dockerfile)
+-       [`6.1.0`, `6.1` (*6.1/Dockerfile*)](https://github.com/docker-solr/docker-solr/blob/43af88ba395a263785177ad04d75a5e8f0ec6401/6.1/Dockerfile)
+-       [`6.0.0`, `6.0` (*6.0/Dockerfile*)](https://github.com/docker-solr/docker-solr/blob/43af88ba395a263785177ad04d75a5e8f0ec6401/6.0/Dockerfile)
+-       [`5.5.3`, `5.5`, `5` (*5.5/Dockerfile*)](https://github.com/docker-solr/docker-solr/blob/e45bf96dba8ad5b5003e4cf409e3cd163af25cea/5.5/Dockerfile)
+-       [`5.4.1`, `5.4` (*5.4/Dockerfile*)](https://github.com/docker-solr/docker-solr/blob/43af88ba395a263785177ad04d75a5e8f0ec6401/5.4/Dockerfile)
+-       [`5.3.2`, `5.3` (*5.3/Dockerfile*)](https://github.com/docker-solr/docker-solr/blob/43af88ba395a263785177ad04d75a5e8f0ec6401/5.3/Dockerfile)
 
 For each of these there are variants based on the Alpine image, .e.g `6.0-alpine`.
 
@@ -23,6 +25,8 @@ Learn more on [Apache Solr homepage](http://lucene.apache.org/solr/) and in the 
 
 # How to use this Docker image
 
+## Run Solr and index example data
+
 To run a single Solr server:
 
 ```console
@@ -39,7 +43,7 @@ $ docker exec -it --user=solr my_solr bin/solr create_core -c gettingstarted
 
 In the web UI if you click on "Core Admin" you should now see the "gettingstarted" core.
 
-If you want to load some example data:
+If you want to load some of the example data that is included in the container:
 
 ```console
 $ docker exec -it --user=solr my_solr bin/post -c gettingstarted example/exampledocs/manufacturers.xml
@@ -47,10 +51,29 @@ $ docker exec -it --user=solr my_solr bin/post -c gettingstarted example/example
 
 In the UI, find the "Core selector" popup menu and select the "gettingstarted" core, then select the "Query" menu item. This gives you a default search for `*:*` which returns all docs. Hit the "Execute Query" button, and you should see a few docs with data. Congratulations!
 
+## Single-command demo
+
 For convenience, there is a single command that starts Solr, creates a collection called "demo", and loads sample data into it:
 
 ```console
 $ docker run --name solr_demo -d -P solr solr-demo
+```
+
+## Loading your own data
+
+If you want load your own data, you'll have to make it available to the container, for example by copying it into the container:
+
+```console
+$ docker cp $HOME/mydata/mydata.xml my_solr:/opt/solr/mydata.xml
+$ docker exec -it --user=solr my_solr bin/post -c gettingstarted mydata.xml
+```
+
+or by using Docker host volumes:
+
+```console
+$ docker run --name my_solr -d -p 8983:8983 -t -v $HOME/mydata:/opt/solr/mydata solr
+$ docker exec -it --user=solr my_solr bin/solr create_core -c gettingstarted
+$ docker exec -it --user=solr my_solr bin/post -c gettingstarted mydata/mydata.xml
 ```
 
 To learn more about Solr, see the [Apache Solr Reference Guide](https://cwiki.apache.org/confluence/display/solr/Apache+Solr+Reference+Guide).
@@ -65,7 +88,14 @@ If you run:
 $ docker run -d -P solr solr-create -c mycore
 ```
 
-the container will run Solr, wait for it to start, and then run the "solr create" command with the arguments you passed.
+the container will:
+
+- run Solr in the background, on the loopback interface
+- wait for it to start
+- run the "solr create" command with the arguments you passed
+- stop the background Solr
+- start Solr in the foreground
+
 You can combine this with mounted volumes to pass in core configuration from your host:
 
 ```console
@@ -76,12 +106,11 @@ When using the `solr-create` command, Solr will log to the standard docker log (
 and the collection creation will happen in the background and log to `/opt/docker-solr/init.log`.
 
 This first way closely mirrors the manual core creation steps and uses Solr's own tools to create the core,
-so should be reliable. But because the core creation happens in the background it is harder to spot failures,
-and there is a window where Solr is ready but the core has not yet been created.
+so should be reliable.
 
 The second way of creating a core at start time is using the `solr-precreate` command. This will create the core
 in the filesystem before running Solr. You should pass it the core name, and optionally the directory to copy the
-config from (this defaults to Solr's built-in "basic_configs"). For example:
+config from (this defaults to Solr's built-in "data_driven_schema_configs"). For example:
 
 ```console
 $ docker run -d -P solr solr-precreate mycore
@@ -97,49 +126,62 @@ $ docker run -d -P -v $PWD/mycores:/opt/solr/server/solr/mycores solr solr-precr
 ```
 
 This second way is quicker, easier to monitor because it logs to the docker log, and can fail immediately if something is wrong.
-But, because it makes assumptions about Solr's "basic_configs", future upstream changes could break that.
+But, because it makes assumptions about Solr's "data_driven_schema_configs", future upstream changes could break that.
 
 The third way of creating a core at startup is to use the image extension mechanism explained in the next section.
+
+## Using Docker Compose
+
+With Docker Compose you can create a Solr container with the index stored in a named data volume.
+Create a `docker-compose.yml` like:
+
+```
+version: '2'
+services:
+  solr:
+    image: solr
+    ports:
+     - "8983:8983"
+    volumes:
+      - data:/opt/solr/server/solr/mycores
+    entrypoint:
+      - docker-entrypoint.sh
+      - solr-precreate
+      - mycore
+volumes:
+  data:
+```
+
+and just run `docker-compose up`.
 
 ## Extending the image
 
 The docker-solr image has an extension mechanism. At run time, before starting Solr, the container will execute scripts
 in the `/docker-entrypoint-initdb.d/` directory. You can add your own scripts there either by using mounted volumes
 or by using a custom Dockerfile. These scripts can for example copy a core directory with pre-loaded data for continuous
-integration testing. Or they can put themselves in the background, wait for Solr to start, create a core, and then run
-a sequence of REST commands for testing.
+integration testing, or modify the Solr configuration.
 
-Here is a simple example. With a `print-status.sh` script like:
+Here is a simple example. With a `set-heap.sh` script like:
 
 ```console
-OUTPUT=/opt/docker-solr/status.log
-echo "starting $0; logging to $OUTPUT"
-{
-    /opt/docker-solr/scripts/wait-for-solr.sh
-    /opt/solr/bin/solr status > /opt/docker-solr/status
-
-} </dev/null >$OUTPUT 2>&1 &
+#!/bin/bash
+set -e
+cp /opt/solr/bin/solr.in.sh /opt/solr/bin/solr.in.sh.orig
+sed -e 's/SOLR_HEAP=".*"/SOLR_HEAP="1024m"/' </opt/solr/bin/solr.in.sh.orig >/opt/solr/bin/solr.in.sh
+grep '^SOLR_HEAP=' /opt/solr/bin/solr.in.sh
 ```
+
 you can run:
 
 ```console
-$ docker run --name solr_status1 -d -P -v $PWD/docs/print-status.sh:/docker-entrypoint-initdb.d/print-status.sh solr
+$ docker run --name solr_heap1 -d -P -v $PWD/docs/set-heap.sh:/docker-entrypoint-initdb.d/set-heap.sh solr
 $ sleep 5
-$ docker exec solr_status1 cat /opt/docker-solr/status
-```
+$ docker logs solr_heap1 | head
+/opt/docker-solr/scripts/docker-entrypoint.sh: running /docker-entrypoint-initdb.d/set-heap.sh
+SOLR_HEAP="1024m"
 
-and get:
 
-```console
-Found 1 Solr nodes:
-
-Solr process 1 running on port 8983
-{
-  "solr_home":"/opt/solr/server/solr",
-  "version":"6.0.0 48c80f91b8e5cd9b3a9b48e6184bd53e7619e7e3 - nknize - 2016-04-01 14:41:49",
-  "startTime":"2016-04-11T08:32:03.657Z",
-  "uptime":"0 days, 0 hours, 0 minutes, 5 seconds",
-  "memory":"34.6 MB (%7.1) of 490.7 MB"}
+Starting Solr on port 8983 from /opt/solr/server
 ```
 
 With this extension mechanism it can be useful to see the shell commands that are being executed by the `docker-entrypoint.sh`

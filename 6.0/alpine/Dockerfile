@@ -6,12 +6,18 @@ MAINTAINER  Martijn Koster "mak-docker@greenhills.co.uk"
 #   docker build -t mine --build-arg SOLR_DOWNLOAD_SERVER=http://www-eu.apache.org/dist/lucene/solr .
 ARG SOLR_DOWNLOAD_SERVER
 
-RUN apk add --update \
+# Override the GPG keyserver with e.g.:
+#   docker build -t mine --build-arg GPG_KEYSERVER=hkp://eu.pool.sks-keyservers.net .
+ARG GPG_KEYSERVER
+
+RUN apk add --no-cache \
         lsof \
         gnupg \
+        procps \
         tar \
-        bash \
-    && rm -rf /var/cache/apk/*
+        bash
+RUN apk add --no-cache ca-certificates wget && \
+        update-ca-certificates
 
 ENV SOLR_USER solr
 ENV SOLR_UID 8983
@@ -19,35 +25,40 @@ ENV SOLR_UID 8983
 RUN addgroup -S -g $SOLR_UID $SOLR_USER && \
   adduser -S -u $SOLR_UID -g $SOLR_USER $SOLR_USER
 
-ENV SOLR_KEY 95B01F0E78111D63D331C1A751F0CC22F625308A
+ENV SOLR_KEY 5F55943E13D49059D3F342777186B06E1ED139E7
 RUN gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$SOLR_KEY"
+ENV GPG_KEYSERVER ${GPG_KEYSERVER:-hkp://ha.pool.sks-keyservers.net}
+RUN gpg --keyserver "$GPG_KEYSERVER" --recv-keys "$SOLR_KEY"
 
-ENV SOLR_VERSION 6.0.0
-ENV SOLR_SHA256 abf5ae9f16a752ddbb2184c97ce62249a0d9f28642c62fa3333adc1c27916672
-ENV SOLR_URL ${SOLR_DOWNLOAD_SERVER:-http://www-us.apache.org/dist/lucene/solr}/$SOLR_VERSION/solr-$SOLR_VERSION.tgz
+ENV SOLR_VERSION 6.0.1
+ENV SOLR_SHA256 4fd25942f0b8083a2499e1dc606c6dd29e4b520c28a16a2d82111088126d43af
+ENV SOLR_URL ${SOLR_DOWNLOAD_SERVER:-https://archive.apache.org/dist/lucene/solr}/$SOLR_VERSION/solr-$SOLR_VERSION.tgz
 
 RUN mkdir -p /opt/solr && \
-  wget $SOLR_URL -O /opt/solr.tgz && \
-  wget $SOLR_URL.asc -O /opt/solr.tgz.asc && \
+  echo "downloading $SOLR_URL" && \
+  wget -q $SOLR_URL -O /opt/solr.tgz && \
+  echo "downloading $SOLR_URL.asc" && \
+  wget -q $SOLR_URL.asc -O /opt/solr.tgz.asc && \
   echo "$SOLR_SHA256 */opt/solr.tgz" | sha256sum -c - && \
   (>&2 ls -l /opt/solr.tgz /opt/solr.tgz.asc) && \
-  gpg --verify /opt/solr.tgz.asc && \
+  gpg --batch --verify /opt/solr.tgz.asc /opt/solr.tgz && \
   tar -C /opt/solr --extract --file /opt/solr.tgz --strip-components=1 && \
   rm /opt/solr.tgz* && \
-  mkdir -p /opt/solr/server/solr/lib && \
+  rm -Rf /opt/solr/docs/ && \
+  mkdir -p /opt/solr/server/solr/lib /opt/solr/server/solr/mycores && \
   sed -i -e 's/#SOLR_PORT=8983/SOLR_PORT=8983/' /opt/solr/bin/solr.in.sh && \
   sed -i -e '/-Dsolr.clustering.enabled=true/ a SOLR_OPTS="$SOLR_OPTS -Dsun.net.inetaddr.ttl=60 -Dsun.net.inetaddr.negative.ttl=60"' /opt/solr/bin/solr.in.sh && \
   chown -R $SOLR_USER:$SOLR_USER /opt/solr && \
   mkdir /docker-entrypoint-initdb.d /opt/docker-solr/
 
-COPY docker-entrypoint.sh /
 COPY scripts /opt/docker-solr/scripts
-RUN chmod -R a+x /docker-entrypoint.sh
 RUN chown -R $SOLR_USER:$SOLR_USER /opt/docker-solr
+
+ENV PATH /opt/solr/bin:/opt/docker-solr/scripts:$PATH
 
 EXPOSE 8983
 WORKDIR /opt/solr
 USER $SOLR_USER
 
-ENTRYPOINT ["/docker-entrypoint.sh"]
+ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["solr"]
