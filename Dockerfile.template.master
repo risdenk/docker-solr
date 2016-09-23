@@ -26,12 +26,12 @@ RUN mkdir -p /opt/solr && \
 
 COPY docker-entrypoint.sh /
 COPY scripts /opt/docker-solr/scripts
-RUN chmod -R a+x /docker-entrypoint.sh
+RUN chmod -R a+x /opt/docker-solr/docker-entrypoint.sh
 RUN chown -R $SOLR_USER:$SOLR_USER /opt/docker-solr
 
 EXPOSE 8983
 WORKDIR /opt/solr
 USER $SOLR_USER
 
-ENTRYPOINT ["/docker-entrypoint.sh"]
+ENTRYPOINT ["/opt/docker-solr/scripts/docker-entrypoint.sh"]
 CMD ["solr"]
