@@ -25,7 +25,7 @@ RUN mkdir -p /opt/solr && \
   mkdir /docker-entrypoint-initdb.d /opt/docker-solr/
 
 COPY scripts /opt/docker-solr/scripts
-RUN chmod -R a+x /opt/docker-solr/docker-entrypoint.sh
+RUN chmod -R a+x /opt/docker-solr/scripts/docker-entrypoint.sh
 RUN chown -R $SOLR_USER:$SOLR_USER /opt/docker-solr
 
 EXPOSE 8983
