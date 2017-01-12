@@ -25,13 +25,13 @@ ENV SOLR_UID 8983
 RUN addgroup -S -g $SOLR_UID $SOLR_USER && \
   adduser -S -u $SOLR_UID -g $SOLR_USER $SOLR_USER
 
-ENV SOLR_KEY "fingerprint-goes-here"
+ENV SOLR_KEY 38D2EA16DDF5FC722EBC433FDC92616F177050F6
 RUN gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$SOLR_KEY"
 ENV GPG_KEYSERVER ${GPG_KEYSERVER:-hkp://ha.pool.sks-keyservers.net}
 RUN gpg --keyserver "$GPG_KEYSERVER" --recv-keys "$SOLR_KEY"
 
-ENV SOLR_VERSION 0.0.0
-ENV SOLR_SHA256 "checksum-goes-here"
+ENV SOLR_VERSION 6.3.0
+ENV SOLR_SHA256 07692257575fe54ddb8a8f64e96d3d352f2f533aa91b5752be1869d2acf2f544
 ENV SOLR_URL ${SOLR_DOWNLOAD_SERVER:-https://archive.apache.org/dist/lucene/solr}/$SOLR_VERSION/solr-$SOLR_VERSION.tgz
 
 RUN mkdir -p /opt/solr && \

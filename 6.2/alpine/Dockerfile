@@ -1,5 +1,5 @@
 
-FROM    java:openjdk-8-jre-alpine
+FROM    openjdk:8-jre-alpine
 MAINTAINER  Martijn Koster "mak-docker@greenhills.co.uk"
 
 # Override the solr download location with e.g.:
@@ -25,13 +25,13 @@ ENV SOLR_UID 8983
 RUN addgroup -S -g $SOLR_UID $SOLR_USER && \
   adduser -S -u $SOLR_UID -g $SOLR_USER $SOLR_USER
 
-ENV SOLR_KEY 2C72EB1397733A551DDB60CCF119941F6E68DA61
+ENV SOLR_KEY 38D2EA16DDF5FC722EBC433FDC92616F177050F6
 RUN gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$SOLR_KEY"
 ENV GPG_KEYSERVER ${GPG_KEYSERVER:-hkp://ha.pool.sks-keyservers.net}
 RUN gpg --keyserver "$GPG_KEYSERVER" --recv-keys "$SOLR_KEY"
 
-ENV SOLR_VERSION 6.2.0
-ENV SOLR_SHA256 ba7c93e1c8d28717d6d84788ebdc2e8e9211a32f48b5a30b2a904762a0b7cd39
+ENV SOLR_VERSION 6.2.1
+ENV SOLR_SHA256 344cb317ab42978dcc66944dd8cfbd5721e27e1c64919308082b0623a310b607
 ENV SOLR_URL ${SOLR_DOWNLOAD_SERVER:-https://archive.apache.org/dist/lucene/solr}/$SOLR_VERSION/solr-$SOLR_VERSION.tgz
 
 RUN mkdir -p /opt/solr && \
@@ -61,4 +61,4 @@ WORKDIR /opt/solr
 USER $SOLR_USER
 
 ENTRYPOINT ["docker-entrypoint.sh"]
-CMD ["solr"]
+CMD ["solr-foreground"]

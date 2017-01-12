@@ -1,5 +1,5 @@
 
-FROM    openjdk:8-jre-alpine
+FROM    openjdk:8-jre
 MAINTAINER  Martijn Koster "mak-docker@greenhills.co.uk"
 
 # Override the solr download location with e.g.:
@@ -10,35 +10,27 @@ ARG SOLR_DOWNLOAD_SERVER
 #   docker build -t mine --build-arg GPG_KEYSERVER=hkp://eu.pool.sks-keyservers.net .
 ARG GPG_KEYSERVER
 
-RUN apk add --no-cache \
-        lsof \
-        gnupg \
-        procps \
-        tar \
-        bash
-RUN apk add --no-cache ca-certificates wget && \
-        update-ca-certificates
+RUN apt-get update && \
+  apt-get -y install lsof && \
+  rm -rf /var/lib/apt/lists/*
 
 ENV SOLR_USER solr
 ENV SOLR_UID 8983
 
-RUN addgroup -S -g $SOLR_UID $SOLR_USER && \
-  adduser -S -u $SOLR_UID -g $SOLR_USER $SOLR_USER
+RUN groupadd -r -g $SOLR_UID $SOLR_USER && \
+  useradd -r -u $SOLR_UID -g $SOLR_USER $SOLR_USER
 
-ENV SOLR_KEY "fingerprint-goes-here"
-RUN gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$SOLR_KEY"
+ENV SOLR_KEY 38D2EA16DDF5FC722EBC433FDC92616F177050F6
 ENV GPG_KEYSERVER ${GPG_KEYSERVER:-hkp://ha.pool.sks-keyservers.net}
 RUN gpg --keyserver "$GPG_KEYSERVER" --recv-keys "$SOLR_KEY"
 
-ENV SOLR_VERSION 0.0.0
-ENV SOLR_SHA256 "checksum-goes-here"
+ENV SOLR_VERSION 6.3.0
+ENV SOLR_SHA256 07692257575fe54ddb8a8f64e96d3d352f2f533aa91b5752be1869d2acf2f544
 ENV SOLR_URL ${SOLR_DOWNLOAD_SERVER:-https://archive.apache.org/dist/lucene/solr}/$SOLR_VERSION/solr-$SOLR_VERSION.tgz
 
 RUN mkdir -p /opt/solr && \
-  echo "downloading $SOLR_URL" && \
-  wget -q $SOLR_URL -O /opt/solr.tgz && \
-  echo "downloading $SOLR_URL.asc" && \
-  wget -q $SOLR_URL.asc -O /opt/solr.tgz.asc && \
+  wget -nv $SOLR_URL -O /opt/solr.tgz && \
+  wget -nv $SOLR_URL.asc -O /opt/solr.tgz.asc && \
   echo "$SOLR_SHA256 */opt/solr.tgz" | sha256sum -c - && \
   (>&2 ls -l /opt/solr.tgz /opt/solr.tgz.asc) && \
   gpg --batch --verify /opt/solr.tgz.asc /opt/solr.tgz && \

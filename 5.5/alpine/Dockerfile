@@ -1,5 +1,5 @@
 
-FROM    java:openjdk-8-jre-alpine
+FROM    openjdk:8-jre-alpine
 MAINTAINER  Martijn Koster "mak-docker@greenhills.co.uk"
 
 # Override the solr download location with e.g.:
@@ -61,4 +61,4 @@ WORKDIR /opt/solr
 USER $SOLR_USER
 
 ENTRYPOINT ["docker-entrypoint.sh"]
-CMD ["solr"]
+CMD ["solr-foreground"]
