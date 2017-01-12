@@ -1,10 +1,11 @@
 
-FROM    java:openjdk-8-jre-alpine
+FROM    openjdk:8-jre-alpine
 MAINTAINER  Kevin Risden "risdenk@avalonconsult.com"
 
 RUN apk --no-cache add \
         lsof \
         gnupg \
+        procps \
         tar \
         bash
 RUN apk add --no-cache ca-certificates wget && \
@@ -37,4 +38,4 @@ WORKDIR /opt/solr
 USER $SOLR_USER
 
 ENTRYPOINT ["/opt/docker-solr/scripts/docker-entrypoint.sh"]
-CMD ["solr"]
+CMD ["solr-foreground"]

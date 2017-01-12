@@ -1,5 +1,5 @@
 
-FROM    java:openjdk-8-jre
+FROM    openjdk:8-jre
 MAINTAINER  Kevin Risden "risdenk@avalonconsult.com"
 
 RUN apt-get update && \
@@ -33,4 +33,4 @@ WORKDIR /opt/solr
 USER $SOLR_USER
 
 ENTRYPOINT ["/opt/docker-solr/scripts/docker-entrypoint.sh"]
-CMD ["solr"]
+CMD ["solr-foreground"]
