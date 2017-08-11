@@ -4,7 +4,7 @@ set -e -o pipefail
 set -x 
 
 BUILD_NUMBER=$(curl -sSL -f https://builds.apache.org/job/Solr-Artifacts-master/lastSuccessfulBuild/buildNumber)
-SOLR_VERSION="7.0.0-$BUILD_NUMBER"
+SOLR_VERSION="8.0.0-$BUILD_NUMBER"
 
 rm -rf master/*
 cp -r scripts master/
