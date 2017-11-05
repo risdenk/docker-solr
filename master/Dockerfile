@@ -12,7 +12,7 @@ ENV SOLR_UID 8983
 RUN groupadd -r $SOLR_USER && \
   useradd -r -u $SOLR_UID -g $SOLR_USER $SOLR_USER
 
-ENV SOLR_VERSION 8.0.0-3207
+ENV SOLR_VERSION 8.0.0-3208
 
 RUN mkdir -p /opt/solr && \
   wget -nv --output-document=/opt/solr.tgz https://builds.apache.org/job/Solr-Artifacts-master/lastSuccessfulBuild/artifact/solr/package/solr-$SOLR_VERSION.tgz && \
