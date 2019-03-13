@@ -13,6 +13,7 @@ RUN apk add --no-cache ca-certificates wget && \
 
 ENV SOLR_USER solr
 ENV SOLR_UID 8983
+ENV PATH="/opt/solr/bin:/opt/docker-solr/scripts:$PATH"
 
 RUN addgroup -S -g $SOLR_UID $SOLR_USER && \
   adduser -S -u $SOLR_UID -g $SOLR_USER $SOLR_USER

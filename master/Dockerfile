@@ -8,6 +8,7 @@ RUN apt-get update && \
 
 ENV SOLR_USER solr
 ENV SOLR_UID 8983
+ENV PATH="/opt/solr/bin:/opt/docker-solr/scripts:$PATH"
 
 RUN groupadd -r $SOLR_USER && \
   useradd -r -u $SOLR_UID -g $SOLR_USER $SOLR_USER
