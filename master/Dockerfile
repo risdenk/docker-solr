@@ -3,7 +3,7 @@ FROM    openjdk:8-jre
 MAINTAINER  Kevin Risden "risdenk@avalonconsult.com"
 
 RUN apt-get update && \
-  apt-get -y install lsof && \
+  apt-get -y install lsof procps && \
   rm -rf /var/lib/apt/lists/*
 
 ENV SOLR_USER solr
