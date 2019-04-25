@@ -13,7 +13,7 @@ ENV PATH="/opt/solr/bin:/opt/docker-solr/scripts:$PATH"
 RUN groupadd -r $SOLR_USER && \
   useradd -r -u $SOLR_UID -g $SOLR_USER $SOLR_USER
 
-ENV SOLR_VERSION 9.0.0-3587
+ENV SOLR_VERSION 9.0.0-3628
 
 RUN mkdir -p /opt/solr && \
   wget -nv --output-document=/opt/solr.tgz https://builds.apache.org/job/Solr-Artifacts-master/lastSuccessfulBuild/artifact/solr/package/solr-$SOLR_VERSION.tgz && \
